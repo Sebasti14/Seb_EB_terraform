@@ -1,16 +1,16 @@
 ## Describing application name ##
 
 resource "aws_elastic_beanstalk_application" "app" {
-  name = "${EB-var.app_name}"
-  description = "${AWS Elastic Beanstalk - var.app_name App}"
+  name = "EB-${var.app_name}"
+  description = "AWS Elastic Beanstalk - ${var.app_name} App"
 }
 
 ## Creating EB application version to source code from S3 ##
 
 resource "aws_elastic_beanstalk_application_version" "app-code" {
-  name        = "eb-app-version"
+  name        = "eb-app-version-${var.app_version}"
   application = var.app_name
-  description = "${Elastic Beanstalk application - var.app_name app version}"
+  description = "Elastic Beanstalk application - ${var.app_name}-${var.app_version}"
   bucket      = aws_s3_bucket.eb-bucket.id
   key         = aws_s3_bucket_object.eb-bucket-object.id
 }
@@ -18,13 +18,13 @@ resource "aws_elastic_beanstalk_application_version" "app-code" {
 ## Creating the EB environment ##
 
 resource "aws_elastic_beanstalk_environment" "app-env" {
-  name = "${var.app_name-app-env}"
+  name = "${var.app_name}-app-env"
   application = aws_elastic_beanstalk_application.app.name
   solution_stack_name = var.app_stack_name
   setting {
     namespace = "aws:ec2:vpc"
     name      = "VPCId"
-    value     = "${aws_vpc.main-vpc.id}"
+    value     = aws_vpc.main-vpc.id
   }
   setting {
     namespace = "aws:ec2:vpc"
@@ -72,31 +72,31 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
   setting {
     namespace = "aws:ec2:vpc"
     name = "ELBSubnets"
-    value = "aws_subnet.az-public[0].id,aws_subnet.az-public[1].id,aws_subnet.az-public[2].id"
+    value = "aws_subnet.az-public[*].id"
   }
   
 ## Settings for Classic load balancer ##
 #  setting {
 #    namespace = "aws:elb:loadbalancer"
 #    name = "SecurityGroups"
-#    value = "${aws_security_group.eb-lb-sg.id}"
+#    value = aws_security_group.eb-lb-sg.id
 #  }
 #  setting {
 #    namespace = "aws:elb:loadbalancer"
 #    name = "ManagedSecurityGroup"
-#    value = "${aws_security_group.eb-lb-sg.id}"
+#    value = aws_security_group.eb-lb-sg.id
 #  }
 
 ## Settings for Application Load Balancer ##
   setting {
     namespace = "aws:elbv2:loadbalancer"
     name = "SecurityGroups"
-    value = "${aws_security_group.eb-lb-sg.id}"
+    value = aws_security_group.eb-lb-sg.id
   }
   setting {
     namespace = "aws:elbv2:loadbalancer"
     name = "ManagedSecurityGroup"
-    value = "${aws_security_group.eb-lb-sg.id}"
+    value = aws_security_group.eb-lb-sg.id
   }
 
   setting {
@@ -123,13 +123,13 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
   setting {
     namespace = "aws:autoscaling:asg"
     name = "MinSize"
-    value = "1"
+    value = var.min_autoscale_num
   }
   
   setting {
     namespace = "aws:autoscaling:asg"
     name = "MaxSize"
-    value = "4"
+    value = var.max_autoscale_num
   }
   
   setting {
@@ -137,6 +137,9 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
 	 name = "DeleteOnTerminate"
 	 value = "true"
   }
+  
+  ## Below settings applicable only if its Application Load Balancer ##
+  
   setting {
      namespace = "aws:elbv2:loadbalancer"
 	 name = "AccessLogsS3Bucket"
@@ -151,5 +154,13 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
      namespace = "aws:elbv2:loadbalancer"
 	 name = "AccessLogsS3Prefix"
 	 value = var.app_name
-  }  
+  }
+  depends_on = [
+    aws_key_pair.eb-ec2-key-pair,
+    aws_security_group.eb-vpc-sg,
+    aws_security_group.eb-lb-sg,
+    aws_s3_bucket_object.eb-bucket-object,
+    aws_iam_policy_attachment.eb-ec2-role-attach,
+    aws_iam_policy_attachment.eb-service-role-attach,
+  ]
 }
