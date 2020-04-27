@@ -48,14 +48,14 @@ EOF
 
 resource "aws_iam_policy_attachment" "eb-ec2-role-attach" {
     for_each = toset(var.ec2_policies)
-    name = "${eb-ec2-role-attach-policy-each.value}"
-    roles = ["${aws_iam_role.ec2-role.name}"]
-    policy_arn = "${arn:aws:iam::aws:policy/each.value}"
+    name = "eb-ec2-role-attach-policy-${each.value}"
+    roles = [aws_iam_role.ec2-role.name]
+    policy_arn = "arn:aws:iam::aws:policy/${each.value}"
 }
 
-resource "aws_iam_policy_attachment" "app-attach5" {
+resource "aws_iam_policy_attachment" "eb-service-role-attach" {
     for_each = toset(var.service_policies)
-    name = "${eb-service-role-attach-policy-each.value}"
-    roles = ["${aws_iam_role.eb-service-role.name}"]
-    policy_arn = "${arn:aws:iam::aws:policy/service-role/each.value}"
+    name = "eb-service-role-attach-policy-${each.value}"
+    roles = [aws_iam_role.eb-service-role.name]
+    policy_arn = "arn:aws:iam::aws:policy/service-role/${each.value}"
 }
