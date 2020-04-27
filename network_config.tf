@@ -83,7 +83,7 @@ resource "aws_eip" "nat" {
 
 resource "aws_nat_gateway" "main-ngw" {
   allocation_id = aws_eip.nat.id
-  subnet_id = aws_subnet.az-public.id[0]
+  subnet_id = aws_subnet.az-public.[0].id
   depends_on = [
     aws_internet_gateway.main-igw,
     aws_aubnet.az-public,
@@ -103,6 +103,6 @@ resource "aws_route_table" "main-private" {
 
 resource "aws_route_table_association" "main-private-route" {
   count = var.aws_subnet_count
-  subnet_id = "${aws_subnet.az-private.count.*.id, count.index}"
+  subnet_id = element(aws_subnet.az-private.*.id,count.index)"
   route_table_id = "${aws_route_table.main-private.id}"
 }
