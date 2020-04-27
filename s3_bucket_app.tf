@@ -2,7 +2,7 @@
 
 resource "aws_s3_bucket" "eb-bucket" {
   #bucket = "eb-app-bucket"
-  bucket_prefix = "${elasticbeanstalk-var.aws_region-var.app_name}"
+  bucket_prefix = "elasticbeanstalk-${var.aws_region}-${var.app_name}"
   region = var.aws_region
   acl    = "private"
   tags = {
