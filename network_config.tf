@@ -20,8 +20,8 @@ data "aws_availability_zones" "available" {
 
 resource "aws_subnet" "az-public" {
   count = var.aws_subnet_count
-  vpc_id = aws_vpc.vpc-main.id
-  cidr_block = cidrsubnet(aws_vpc.vpc-main.cidr_block, 8, count.index+1)
+  vpc_id = aws_vpc.main-vpc.id
+  cidr_block = cidrsubnet(aws_vpc.main-vpc.cidr_block, 8, count.index+1)
   availability_zone = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = "true"
   tags = {
@@ -34,8 +34,8 @@ resource "aws_subnet" "az-public" {
 
 resource "aws_subnet" "az-private" {
   count = var.aws_subnet_count
-  vpc_id = aws_vpc.vpc-main.id
-  cidr_block = cidrsubnet(aws_vpc.vpc-main.cidr_block, 8, count.index+6)
+  vpc_id = aws_vpc.main-vpc.id
+  cidr_block = cidrsubnet(aws_vpc.main-vpc.cidr_block, 8, count.index+6)
   availability_zone = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = "false"
   tags = {
@@ -77,32 +77,33 @@ resource "aws_route_table_association" "main-public" {
 
 ## NAT gateway, route-table and route-table association ##
 
-resource "aws_eip" "nat" {
-  vpc = true
-}
+#resource "aws_eip" "nat" {
+#  vpc = true
+#}
 
-resource "aws_nat_gateway" "main-ngw" {
-  allocation_id = aws_eip.nat.id
-  subnet_id = aws_subnet.az-public.[0].id
-  depends_on = [
-    aws_internet_gateway.main-igw,
-    aws_aubnet.az-public,
-    ]
-}
+#resource "aws_nat_gateway" "main-ngw" {
+#  allocation_id = aws_eip.nat.id
+#  subnet_id = element(aws_subnet.az-public.*.id,0)
+#  depends_on = [
+#    aws_internet_gateway.main-igw,
+#    aws_aubnet.az-public,
+#    ]
+#}
 
-resource "aws_route_table" "main-private" {
-  vpc_id = aws_vpc.main-vpc.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main-ngw.id
-  }
-  tags = {
-    Name = "main-private-route"
-  }
-}
+#resource "aws_route_table" "main-private" {
+#  vpc_id = aws_vpc.main-vpc.id
+#  route {
+#    cidr_block = "0.0.0.0/0"
+#    nat_gateway_id = aws_nat_gateway.main-ngw.id
+#  }
+#  tags = {
+#    Name = "main-private-route"
+#  }
+#}
 
 resource "aws_route_table_association" "main-private-route" {
   count = var.aws_subnet_count
   subnet_id = element(aws_subnet.az-private.*.id,count.index)"
-  route_table_id = "${aws_route_table.main-private.id}"
+  route_table_id = aws_route_table.main-public.id
+#  route_table_id = "${aws_route_table.main-private.id}"
 }
