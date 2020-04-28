@@ -1,14 +1,14 @@
 ## Describing application name ##
 
 resource "aws_elastic_beanstalk_application" "app" {
-  name = "EB-${var.app_name}"
+  name = var.app_name
   description = "AWS Elastic Beanstalk - ${var.app_name} App"
 }
 
 ## Creating EB application version to source code from S3 ##
 
 resource "aws_elastic_beanstalk_application_version" "app-code" {
-  name        = "eb-app-version-${var.app_version}"
+  name        = var.app_name
   application = var.app_name
   description = "Elastic Beanstalk application - ${var.app_name}-${var.app_version}"
   bucket      = aws_s3_bucket.eb-bucket.id
@@ -29,12 +29,13 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
   setting {
     namespace = "aws:ec2:vpc"
     name = "Subnets"
-    value = "aws_subnet.az-private[*].id"
+    value = "join(aws_subnet.az-private[*].id)"
   }
   setting {
     namespace = "aws:ec2:vpc"
     name = "AssociatePublicIpAddress"
-    value = "true"
+    value = "false"	  
+#    value = "true"
   }
 
   setting {
@@ -48,11 +49,12 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
     value = aws_security_group.eb-vpc-sg.id
   }
 
-  setting {
-    namespace = "aws:autoscaling:launchconfiguration"
-    name = "EC2KeyName"
-    value = aws_key_pair.eb-ec2-key-pair.key_name
-  }
+#  setting {
+#    namespace = "aws:autoscaling:launchconfiguration"
+#    name = "EC2KeyName"
+#    value = aws_key_pair.eb-ec2-key-pair.key_name
+#  }
+	
   setting {
     namespace = "aws:ec2:instances"
     name = "InstanceTypes"
@@ -72,7 +74,7 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
   setting {
     namespace = "aws:ec2:vpc"
     name = "ELBSubnets"
-    value = "aws_subnet.az-public[*].id"
+    value = "join(aws_subnet.az-public[*].id)"
   }
   
 ## Settings for Classic load balancer ##
@@ -156,7 +158,7 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
 	 value = var.app_name
   }
   depends_on = [
-    aws_key_pair.eb-ec2-key-pair,
+#    aws_key_pair.eb-ec2-key-pair,
     aws_security_group.eb-vpc-sg,
     aws_security_group.eb-lb-sg,
     aws_s3_bucket_object.eb-bucket-object,
