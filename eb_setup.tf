@@ -29,12 +29,12 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
   setting {
     namespace = "aws:ec2:vpc"
     name = "Subnets"
-    value = "join(aws_subnet.az-private[*].id)"
+    value = join(",", aws_subnet.az-private[*].id)
   }
   setting {
     namespace = "aws:ec2:vpc"
     name = "AssociatePublicIpAddress"
-    value = "false"	  
+    value = "false"
 #    value = "true"
   }
 
@@ -54,7 +54,7 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
 #    name = "EC2KeyName"
 #    value = aws_key_pair.eb-ec2-key-pair.key_name
 #  }
-	
+
   setting {
     namespace = "aws:ec2:instances"
     name = "InstanceTypes"
@@ -65,7 +65,11 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
     name = "ServiceRole"
     value = aws_iam_role.eb-service-role.name
   }
-  
+  setting {
+    namespace = "aws:elasticbeanstalk:environment"
+    name = "LoadBalancerType"
+    value = "application"
+  }
   setting {
     namespace = "aws:ec2:vpc"
     name = "ELBScheme"
@@ -74,9 +78,9 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
   setting {
     namespace = "aws:ec2:vpc"
     name = "ELBSubnets"
-    value = "join(aws_subnet.az-public[*].id)"
+    value = join(",", aws_subnet.az-public[*].id)
   }
-  
+
 ## Settings for Classic load balancer ##
 #  setting {
 #    namespace = "aws:elb:loadbalancer"
@@ -90,11 +94,11 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
 #  }
 
 ## Settings for Application Load Balancer ##
-  setting {
-    namespace = "aws:elbv2:loadbalancer"
-    name = "SecurityGroups"
-    value = aws_security_group.eb-lb-sg.id
-  }
+#  setting {
+#    namespace = "aws:elbv2:loadbalancer"
+#    name = "SecurityGroups"
+#    value = aws_security_group.eb-lb-sg.id
+#  }
   setting {
     namespace = "aws:elbv2:loadbalancer"
     name = "ManagedSecurityGroup"
@@ -127,35 +131,35 @@ resource "aws_elastic_beanstalk_environment" "app-env" {
     name = "MinSize"
     value = var.min_autoscale_num
   }
-  
+
   setting {
     namespace = "aws:autoscaling:asg"
     name = "MaxSize"
     value = var.max_autoscale_num
   }
-  
+
   setting {
      namespace = "aws:elasticbeanstalk:cloudwatch:logs"
-	 name = "DeleteOnTerminate"
-	 value = "true"
+         name = "DeleteOnTerminate"
+         value = "true"
   }
-  
+
   ## Below settings applicable only if its Application Load Balancer ##
-  
+
   setting {
      namespace = "aws:elbv2:loadbalancer"
-	 name = "AccessLogsS3Bucket"
-	 value = aws_s3_bucket.eb-bucket.id
+         name = "AccessLogsS3Bucket"
+         value = aws_s3_bucket.eb-bucket.id
   }
   setting {
      namespace = "aws:elbv2:loadbalancer"
-	 name = "AccessLogsS3Enabled"
-	 value = "true"
+         name = "AccessLogsS3Enabled"
+         value = "true"
   }
   setting {
      namespace = "aws:elbv2:loadbalancer"
-	 name = "AccessLogsS3Prefix"
-	 value = var.app_name
+         name = "AccessLogsS3Prefix"
+         value = var.app_name
   }
   depends_on = [
 #    aws_key_pair.eb-ec2-key-pair,
