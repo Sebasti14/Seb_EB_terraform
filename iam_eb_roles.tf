@@ -49,7 +49,7 @@ EOF
 resource "aws_iam_policy_attachment" "eb-ec2-role-attach" {
     for_each = toset(var.ec2_policies)
     name = "eb-ec2-role-attach-policy-${each.value}"
-    roles = [aws_iam_role.ec2-role.name]
+    roles = [aws_iam_role.eb-ec2-role.name]
     policy_arn = "arn:aws:iam::aws:policy/${each.value}"
 }
 
