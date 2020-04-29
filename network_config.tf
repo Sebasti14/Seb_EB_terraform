@@ -29,7 +29,7 @@ resource "aws_subnet" "az-public" {
   }
   depends_on = [
     aws_vpc.main-vpc
-  ]  
+  ]
 }
 
 resource "aws_subnet" "az-private" {
@@ -43,7 +43,7 @@ resource "aws_subnet" "az-private" {
   }
   depends_on = [
     aws_vpc.main-vpc
-  ]  
+  ]
 }
 
 ## Internet gateway, route-table and route-table association ##
@@ -55,7 +55,7 @@ resource "aws_internet_gateway" "main-igw" {
   }
   depends_on = [
     aws_vpc.main-vpc
-  ]  
+  ]
 }
 
 resource "aws_route_table" "main-public" {
@@ -74,6 +74,7 @@ resource "aws_route_table_association" "main-public" {
     subnet_id = element(aws_subnet.az-public.*.id,count.index)
     route_table_id = aws_route_table.main-public.id
 }
+## Following commented lines required in case private instances are required to connect to internet ##
 
 ## NAT gateway, route-table and route-table association ##
 
@@ -103,7 +104,7 @@ resource "aws_route_table_association" "main-public" {
 
 resource "aws_route_table_association" "main-private-route" {
   count = var.aws_subnet_count
-  subnet_id = element(aws_subnet.az-private.*.id,count.index)"
+  subnet_id = element(aws_subnet.az-private.*.id,count.index)
   route_table_id = aws_route_table.main-public.id
 #  route_table_id = "${aws_route_table.main-private.id}"
 }
